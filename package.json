@@ -1,0 +1,46 @@
+{
+  "name": "wisdom-app",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Wisdom companion — TypeScript package baseline (Expo/React Native app layer to follow).",
+  "type": "module",
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "ai:sync": "node ai/tools/ai-build.mjs",
+    "ai:audit": "node ai/tools/ai-audit.mjs",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.4",
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
+    "@types/node": "^24.10.9",
+    "@vitest/coverage-v8": "^4.1.9",
+    "lefthook": "^2.1.9",
+    "tsup": "^8.5.1",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.9"
+  },
+  "packageManager": "pnpm@11.5.2"
+}

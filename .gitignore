@@ -1,0 +1,24 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+*.d.ts.map
+*.tsbuildinfo
+
+# test artifacts
+coverage/
+
+# env — .env.example is committed when present; real env files are not
+.env
+.env.*
+!.env.example
+
+# editor/os noise
+.DS_Store
+*.log
+.idea/
+
+# local scratch plans — not part of the audit trail
+docs/plans/
