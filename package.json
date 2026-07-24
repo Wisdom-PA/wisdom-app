@@ -2,7 +2,7 @@
   "name": "wisdom-app",
   "version": "0.1.0",
   "private": false,
-  "description": "Wisdom companion — TypeScript package baseline (Expo/React Native app layer to follow).",
+  "description": "Wisdom companion — Expo/React Native app with cube API client.",
   "type": "module",
   "engines": {
     "node": ">=22 <25"
@@ -21,6 +21,10 @@
     "dist"
   ],
   "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
     "build": "tsup",
     "lint": "biome check .",
     "format": "biome check --write .",
@@ -35,12 +39,35 @@
     "@biomejs/biome": "^2.5.4",
     "@commitlint/cli": "^21.2.0",
     "@commitlint/config-conventional": "^21.2.0",
+    "@expo/metro-runtime": "^57.0.7",
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^14.0.1",
     "@types/node": "^24.10.9",
+    "@types/react": "^19.2.17",
+    "@types/react-native": "^0.73.0",
     "@vitest/coverage-v8": "^4.1.9",
+    "babel-preset-expo": "^57.0.4",
+    "jest-expo": "^57.0.2",
     "lefthook": "^2.1.9",
+    "metro": "^0.87.0",
+    "metro-config": "^0.87.0",
     "tsup": "^8.5.1",
     "typescript": "~5.9.3",
     "vitest": "^4.1.9"
   },
-  "packageManager": "pnpm@11.5.2"
+  "packageManager": "pnpm@11.5.2",
+  "dependencies": {
+    "@expo/vector-icons": "^15.1.1",
+    "expo": "^57.0.8",
+    "expo-constants": "^57.0.7",
+    "expo-linking": "^57.0.4",
+    "expo-router": "^57.0.8",
+    "expo-status-bar": "^57.0.1",
+    "react": "^19.2.8",
+    "react-native": "^0.86.0",
+    "react-native-gesture-handler": "^3.1.0",
+    "react-native-reanimated": "^4.5.3",
+    "react-native-safe-area-context": "^5.8.0",
+    "react-native-screens": "^4.26.2"
+  }
 }

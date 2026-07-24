@@ -1,19 +1,33 @@
-// Demo Result<T> type for illustrating error handling patterns.
-export type Result<T> = { ok: true; value: T } | { ok: false; error: Error };
-
-// Demo utility class — replace with actual package implementation.
-export class Example {
-  private message: string;
-
-  constructor(message: string = 'Hello from the package') {
-    this.message = message;
-  }
-
-  getMessage(): string {
-    return this.message;
-  }
-
-  setMessage(message: string): void {
-    this.message = message;
-  }
-}
+export type { CubeClient } from './api/cube-client.ts';
+export { HttpCubeClient } from './api/http-cube-client.ts';
+export { MockCubeClient } from './api/mock-cube-client.ts';
+export type {
+  BackupManifest,
+  BackupStatus,
+  ChainSummary,
+  ChatMessage,
+  ChatResponse,
+  CreateProfile,
+  CreateRoutine,
+  CubeConfig,
+  CubeStatus,
+  Device,
+  DeviceCapability,
+  InternetPolicy,
+  LogAction,
+  LogEntry,
+  LogIntent,
+  LogInternetCall,
+  PatchConfig,
+  PatchDevice,
+  PatchProfile,
+  Profile,
+  ProfileRole,
+  RestoreRequest,
+  RestoreResult,
+  Routine,
+  RoutineAction,
+  RoutineCondition,
+  RoutineTrigger,
+} from './api/types.ts';
+export type { Result } from './result.ts';

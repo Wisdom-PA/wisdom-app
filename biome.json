@@ -18,7 +18,10 @@
       "!.github",
       "!.vscode",
       "!ai",
-      "!.mcp.json"
+      "!.mcp.json",
+      "!babel.config.js",
+      "!metro.config.js",
+      "!.expo"
     ]
   },
   "formatter": {

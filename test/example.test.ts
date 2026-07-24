@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Result } from '../src/index.js';
-import { Example } from '../src/index.js';
+import type { Result } from '../src/result.ts';
 
 describe('Result type', () => {
   it('represents success values', () => {
@@ -17,23 +16,5 @@ describe('Result type', () => {
     if (!result.ok) {
       expect(result.error.message).toBe('failed');
     }
-  });
-});
-
-describe('Example class', () => {
-  it('initializes with a default message', () => {
-    const ex = new Example();
-    expect(ex.getMessage()).toBe('Hello from the package');
-  });
-
-  it('initializes with a custom message', () => {
-    const ex = new Example('custom');
-    expect(ex.getMessage()).toBe('custom');
-  });
-
-  it('updates the message', () => {
-    const ex = new Example('original');
-    ex.setMessage('updated');
-    expect(ex.getMessage()).toBe('updated');
   });
 });

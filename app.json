@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Wisdom",
+    "slug": "wisdom-app",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "wisdom",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wisdompa.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.wisdompa.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": ["expo-router"]
+  }
+}
