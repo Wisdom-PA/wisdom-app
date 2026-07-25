@@ -3,11 +3,14 @@ import type {
   BackupStatus,
   ChatMessage,
   ChatResponse,
+  ConsentStatus,
   CreateProfile,
   CreateRoutine,
   CubeConfig,
   CubeStatus,
   Device,
+  GrantConsentBody,
+  GrantConsentResponse,
   LogEntry,
   PatchConfig,
   PatchDevice,
@@ -16,6 +19,8 @@ import type {
   RestoreRequest,
   RestoreResult,
   Routine,
+  RoutineExecutionResult,
+  RunRoutineBody,
 } from './types.ts';
 
 export class HttpCubeClient implements CubeClient {
@@ -46,6 +51,7 @@ export class HttpCubeClient implements CubeClient {
   async getConfig(): Promise<CubeConfig> {
     return this.request('/config');
   }
+
   async patchConfig(patch: PatchConfig): Promise<CubeConfig> {
     return this.request('/config', { method: 'PATCH', body: JSON.stringify(patch) });
   }
@@ -53,12 +59,19 @@ export class HttpCubeClient implements CubeClient {
   async listDevices(): Promise<Device[]> {
     return this.request('/devices');
   }
+
   async getDevice(deviceId: string): Promise<Device> {
     return this.request(`/devices/${deviceId}`);
   }
+
   async patchDevice(deviceId: string, patch: PatchDevice): Promise<Device> {
     return this.request(`/devices/${deviceId}`, { method: 'PATCH', body: JSON.stringify(patch) });
   }
+
+  async setDeviceState(_deviceId: string, _state: Record<string, unknown>): Promise<Device> {
+    throw new Error('Device state control is not exposed on the cube HTTP API yet (use mock client)');
+  }
+
   async removeDevice(deviceId: string): Promise<void> {
     return this.request(`/devices/${deviceId}`, { method: 'DELETE' });
   }
@@ -66,15 +79,19 @@ export class HttpCubeClient implements CubeClient {
   async listProfiles(): Promise<Profile[]> {
     return this.request('/profiles');
   }
+
   async getProfile(profileId: string): Promise<Profile> {
     return this.request(`/profiles/${profileId}`);
   }
+
   async createProfile(data: CreateProfile): Promise<Profile> {
     return this.request('/profiles', { method: 'POST', body: JSON.stringify(data) });
   }
+
   async patchProfile(profileId: string, patch: PatchProfile): Promise<Profile> {
     return this.request(`/profiles/${profileId}`, { method: 'PATCH', body: JSON.stringify(patch) });
   }
+
   async removeProfile(profileId: string): Promise<void> {
     return this.request(`/profiles/${profileId}`, { method: 'DELETE' });
   }
@@ -82,19 +99,43 @@ export class HttpCubeClient implements CubeClient {
   async listRoutines(): Promise<Routine[]> {
     return this.request('/routines');
   }
+
   async getRoutine(routineId: string): Promise<Routine> {
     return this.request(`/routines/${routineId}`);
   }
+
   async createRoutine(data: CreateRoutine): Promise<Routine> {
     return this.request('/routines', { method: 'POST', body: JSON.stringify(data) });
   }
+
   async removeRoutine(routineId: string): Promise<void> {
     return this.request(`/routines/${routineId}`, { method: 'DELETE' });
+  }
+
+  async runRoutine(routineId: string, body: RunRoutineBody = {}): Promise<RoutineExecutionResult> {
+    return this.request(`/routines/${routineId}/run`, { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  async getRoutineHistory(routineId: string, limit = 20): Promise<LogEntry[]> {
+    return this.request(`/routines/${routineId}/history?limit=${limit}`);
+  }
+
+  async grantInternetConsent(body: GrantConsentBody): Promise<GrantConsentResponse> {
+    return this.request('/internet/consent', { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  async getInternetConsent(profileId: string): Promise<ConsentStatus> {
+    return this.request(`/internet/consent/${profileId}`);
+  }
+
+  async revokeInternetConsent(profileId: string): Promise<void> {
+    return this.request(`/internet/consent/${profileId}`, { method: 'DELETE' });
   }
 
   async queryLogs(params: { limit: number; offset: number }): Promise<LogEntry[]> {
     return this.request(`/logs?limit=${params.limit}&offset=${params.offset}`);
   }
+
   async getChain(chainId: string): Promise<LogEntry> {
     return this.request(`/logs/${chainId}`);
   }
@@ -102,9 +143,11 @@ export class HttpCubeClient implements CubeClient {
   async getBackupStatus(): Promise<BackupStatus> {
     return this.request('/backup/status');
   }
+
   async triggerBackup(): Promise<BackupStatus> {
     return this.request('/backup/trigger', { method: 'POST' });
   }
+
   async restore(request: RestoreRequest): Promise<RestoreResult> {
     return this.request('/backup/restore', { method: 'POST', body: JSON.stringify(request) });
   }
