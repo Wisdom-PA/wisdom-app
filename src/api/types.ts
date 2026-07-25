@@ -1,46 +1,56 @@
 export interface CubeStatus {
+  cubeId: string;
   version: string;
-  uptime: number;
+  uptimeSeconds: number;
   privacyMode: 'normal' | 'paranoid';
-  onlineMode: boolean;
-  connectedDevices: number;
-  activeProfiles: number;
+  internetConnected: boolean;
+  offlineModeEnabled: boolean;
+  pairedDevicesCount: number;
+  profilesCount: number;
+  activeProfileId: string | null;
 }
 
 export interface CubeConfig {
+  cubeId: string;
   defaultPrivacyMode: 'normal' | 'paranoid';
   offlineModeEnabled: boolean;
   timezone: string;
   locale: string;
   wakeWord: string;
-  voiceVerbosity: 'short' | 'normal' | 'detailed';
+  voiceVerbosity: 'short' | 'normal';
 }
 
-export type PatchConfig = Partial<CubeConfig>;
+export type PatchConfig = Partial<
+  Pick<CubeConfig, 'defaultPrivacyMode' | 'offlineModeEnabled' | 'timezone' | 'locale' | 'wakeWord' | 'voiceVerbosity'>
+>;
 
 export type DeviceCapability = 'on_off' | 'dimmable' | 'color_temp' | 'color_rgb';
 
 export interface Device {
   deviceId: string;
   displayName: string;
-  room: string;
-  type: string;
+  room: string | null;
+  tags: string[];
   capabilities: DeviceCapability[];
-  online: boolean;
-  lastSeen: string;
+  reachable: boolean;
+  state: Record<string, unknown>;
 }
 
-export type PatchDevice = Partial<Pick<Device, 'displayName' | 'room'>>;
+export type PatchDevice = {
+  displayName?: string;
+  room?: string | null;
+  tags?: string[];
+};
 
 export type ProfileRole = 'adult' | 'guest' | 'child';
-export type InternetPolicy = 'allowed' | 'allowed_with_prompt' | 'ask_every_time' | 'blocked';
+export type InternetPolicy = 'never' | 'ask_every_time' | 'allowed_with_prompt';
 
 export interface Profile {
   profileId: string;
   preferredName: string;
   role: ProfileRole;
   language: string;
-  voiceVerbosity: 'short' | 'normal' | 'detailed';
+  voiceVerbosity: 'short' | 'normal';
   internetPolicy: InternetPolicy;
   linkedAdults: string[];
   createdAt: string;
@@ -49,10 +59,10 @@ export interface Profile {
 export interface CreateProfile {
   preferredName: string;
   role: ProfileRole;
-  language: string;
-  voiceVerbosity: 'short' | 'normal' | 'detailed';
-  internetPolicy: InternetPolicy;
-  linkedAdults: string[];
+  language?: string;
+  voiceVerbosity?: 'short' | 'normal';
+  internetPolicy?: InternetPolicy;
+  linkedAdults?: string[];
 }
 
 export type PatchProfile = Partial<
@@ -60,81 +70,124 @@ export type PatchProfile = Partial<
 >;
 
 export interface RoutineTrigger {
-  type: 'time' | 'device_event' | 'voice_phrase' | 'sunrise' | 'sunset';
-  value: string;
+  type: 'time' | 'sun_event' | 'device_event' | 'voice_phrase' | 'presence';
+  config: Record<string, unknown>;
 }
 
 export interface RoutineCondition {
-  type: 'time_window' | 'device_state' | 'presence';
-  value: string;
+  type: 'time_window' | 'presence' | 'device_state';
+  config: Record<string, unknown>;
 }
 
 export interface RoutineAction {
-  type: 'device_control' | 'delay' | 'notification';
-  target: string;
-  params: Record<string, unknown>;
+  type: 'device_state' | 'delay' | 'notification';
+  config: Record<string, unknown>;
 }
 
 export interface Routine {
   routineId: string;
   name: string;
+  ownerProfileId: string;
   enabled: boolean;
   triggers: RoutineTrigger[];
   conditions: RoutineCondition[];
   actions: RoutineAction[];
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateRoutine {
   name: string;
+  ownerProfileId: string;
+  enabled?: boolean;
   triggers: RoutineTrigger[];
-  conditions: RoutineCondition[];
+  conditions?: RoutineCondition[];
   actions: RoutineAction[];
 }
 
+export interface RunRoutineBody {
+  profileId?: string;
+}
+
+export interface RoutineActionResult {
+  actionIndex: number;
+  result: 'success' | 'failure';
+  errorMessage?: string;
+}
+
+export interface RoutineExecutionResult {
+  chainId: string;
+  results: RoutineActionResult[];
+}
+
+export interface GrantConsentBody {
+  profileId: string;
+  ttlMs?: number;
+}
+
+export interface GrantConsentResponse {
+  expiresAt: string;
+}
+
+export interface ConsentStatus {
+  active: boolean;
+  expiresAt: string | null;
+}
+
 export interface LogIntent {
+  chainId: string;
   intentIndex: number;
   ts: string;
   utterance: string;
   type: string;
   targets: string[];
-  parameters: Record<string, unknown>;
-  profileId: string;
+  parameters: Record<string, string>;
+  profileId: string | null;
 }
 
 export interface LogAction {
+  chainId: string;
   actionIndex: number;
   intentIndex: number;
   ts: string;
-  before: Record<string, unknown>;
-  after: Record<string, unknown>;
-  result: string;
-  error: string | null;
+  deviceId: string;
+  beforeState: Record<string, unknown>;
+  afterState: Record<string, unknown>;
+  result: 'success' | 'failure';
+  errorMessage: string | null;
 }
 
 export interface LogInternetCall {
+  chainId: string;
   callIndex: number;
   ts: string;
   deviceId: string;
-  profileId: string;
-  metadata: string;
+  profileId: string | null;
+  summary: string;
   serviceCategory: string;
   endpoint: string;
-  result: string;
-  error: string | null;
+  result: 'allowed' | 'blocked' | 'error';
+  errorMessage: string | null;
 }
 
 export interface ChainSummary {
   chainId: string;
   deviceId: string;
   chainStartTs: string;
-  chainEndTs: string;
-  initialProfileId: string;
+  chainEndTs: string | null;
+  initialProfileId: string | null;
+  identifiedAtTs: string | null;
+  identifiedProfileId: string | null;
+  privacyModeChanges: Array<{
+    atTs: string;
+    fromMode: 'paranoid' | 'normal';
+    toMode: 'paranoid' | 'normal';
+    trigger: 'voice' | 'app' | 'permission_grant';
+  }>;
 }
 
 export interface LogEntry {
-  chainId: string;
-  summary: ChainSummary;
+  chain: ChainSummary;
   intents: LogIntent[];
   actions: LogAction[];
   internetCalls: LogInternetCall[];
