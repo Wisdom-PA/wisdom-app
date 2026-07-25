@@ -252,11 +252,21 @@ export interface ExportPayload {
 
 export interface ChatMessage {
   text: string;
-  profileId?: string;
+  profileId?: string | null;
+  /** Per-message consent; cube enforces internet rules (client only forwards the flag). */
+  allowInternet?: boolean;
+}
+
+export interface ChatActionResult {
+  deviceId: string;
+  action: string;
+  result: 'success' | 'failure';
 }
 
 export interface ChatResponse {
+  chainId: string;
   reply: string;
-  intent: string | null;
-  actionsTaken: string[];
+  usedInternet: boolean;
+  privacyMode: 'normal' | 'paranoid';
+  actions: ChatActionResult[];
 }

@@ -1,4 +1,4 @@
-import { useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import type { CubeStatus } from '../../src/api/types.ts';
@@ -63,6 +63,11 @@ export default function DashboardScreen() {
           >
             <Text style={ui.buttonSecondaryText}>Refresh</Text>
           </Pressable>
+          <Link href="/chat" asChild>
+            <Pressable style={ui.button} accessibilityRole="button" accessibilityLabel="Open chat">
+              <Text style={ui.buttonText}>Chat</Text>
+            </Pressable>
+          </Link>
         </View>
       ) : null}
     </ScrollView>

@@ -346,6 +346,18 @@ export default function SettingsScreen() {
       </View>
 
       <View style={ui.section}>
+        <Text style={ui.sectionTitle}>Chat (software)</Text>
+        <Text style={ui.muted}>
+          Text chat with the cube. Phone mic/speaker as satellite (F9.T10.S2) is human-blocked / deferred.
+        </Text>
+        <Link href="/chat" asChild>
+          <Pressable style={ui.button} accessibilityRole="button" accessibilityLabel="Open chat">
+            <Text style={ui.buttonText}>Chat</Text>
+          </Pressable>
+        </Link>
+      </View>
+
+      <View style={ui.section}>
         <Text style={ui.sectionTitle}>Connectivity (software mock)</Text>
         <View style={ui.row}>
           <Text style={ui.rowTitle}>Pairing</Text>

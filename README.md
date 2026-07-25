@@ -32,6 +32,13 @@ human-blocked.
 - Encrypted at-rest mobile storage and remote cloud backup remain deferred /
   human-blocked
 
+## Phase 13.1 (software-only)
+
+- **Chat** — Dashboard / Settings → Chat screen; `CubeClient.chat` with
+  per-message `allowInternet`, on-device vs online + privacy indicators from
+  `ChatResponse`
+- Phone mic/speaker as satellite (F9.T10.S2) remains human-blocked / deferred
+
 ## Develop
 
 ```sh
