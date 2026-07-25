@@ -202,6 +202,19 @@ export interface BackupManifest {
   checksum: string;
 }
 
+/** F10.T1 full backup container (manifest + domain sections; wire keys match cube). */
+export interface BackupPayload {
+  manifest: BackupManifest;
+  profiles: Profile[];
+  routines: Routine[];
+  settings: CubeConfig;
+  memories: MemoryItem[];
+  devices: Device[];
+  logs_intents: LogIntent[];
+  logs_actions: LogAction[];
+  logs_internet_calls: LogInternetCall[];
+}
+
 export interface BackupStatus {
   lastBackup: BackupManifest | null;
   inProgress: boolean;
@@ -209,12 +222,32 @@ export interface BackupStatus {
 
 export interface RestoreRequest {
   backupId: string;
-  mode: 'factory_reset' | 'reset_with_recovery';
+  mode: 'factory_reset' | 'device_routine_recovery';
+  /** When true, validate only — no write. */
+  dryRun?: boolean;
 }
 
 export interface RestoreResult {
   success: boolean;
   message: string;
+  backupId: string;
+  mode: 'factory_reset' | 'device_routine_recovery';
+  dryRun: boolean;
+}
+
+/** Placeholder memory row for privacy UI (cube memory store later). */
+export interface MemoryItem {
+  memoryId: string;
+  profileId: string | null;
+  label: string;
+  createdAt: string;
+}
+
+/** Export-my-data payload (logs + profiles); serialised by buildExportPayload. */
+export interface ExportPayload {
+  exportedAt: string;
+  profiles: Profile[];
+  logs: LogEntry[];
 }
 
 export interface ChatMessage {

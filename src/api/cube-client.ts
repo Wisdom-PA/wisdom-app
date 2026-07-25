@@ -1,4 +1,5 @@
 import type {
+  BackupPayload,
   BackupStatus,
   ChatMessage,
   ChatResponse,
@@ -11,6 +12,7 @@ import type {
   GrantConsentBody,
   GrantConsentResponse,
   LogEntry,
+  MemoryItem,
   PatchConfig,
   PatchDevice,
   PatchProfile,
@@ -54,9 +56,15 @@ export interface CubeClient {
 
   queryLogs(params: { limit: number; offset: number }): Promise<LogEntry[]>;
   getChain(chainId: string): Promise<LogEntry>;
+  /** Clears in-memory / cube behaviour logs (privacy delete-all). */
+  clearLogs(): Promise<void>;
+
+  listMemories(): Promise<MemoryItem[]>;
 
   getBackupStatus(): Promise<BackupStatus>;
   triggerBackup(): Promise<BackupStatus>;
+  /** Full backup payload (F10.T1). Optional until cube exposes GET /backup/:id. */
+  getBackup(backupId: string): Promise<BackupPayload>;
   restore(request: RestoreRequest): Promise<RestoreResult>;
 
   chat(message: ChatMessage): Promise<ChatResponse>;

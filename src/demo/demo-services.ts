@@ -1,4 +1,5 @@
 import { MockCubeClient } from '../api/mock-cube-client.ts';
+import { MemoryLocalBackupStore } from '../backup/local-backup-store.ts';
 import { MockPairingService } from '../pairing/mock-pairing-service.ts';
 import { MemorySessionStore } from '../pairing/pairing-service.ts';
 import { MockWifiProvisioner } from '../wifi/mock-wifi-provisioner.ts';
@@ -7,6 +8,8 @@ import { MockWifiProvisioner } from '../wifi/mock-wifi-provisioner.ts';
 export const demoSessionStore = new MemorySessionStore();
 export const demoPairingService = new MockPairingService({ store: demoSessionStore });
 export const demoWifiProvisioner = new MockWifiProvisioner();
+/** App-side stored backups (software mock — not encrypted at rest yet). */
+export const demoLocalBackupStore = new MemoryLocalBackupStore();
 
 export function createSeededMockClient(): MockCubeClient {
   const client = new MockCubeClient();
@@ -125,10 +128,129 @@ export function createSeededMockClient(): MockCubeClient {
     updatedAt: now,
   });
 
+  client.seedLog({
+    chain: {
+      chainId: 'chain-lights',
+      deviceId: 'dev-sofa-lamp',
+      chainStartTs: '2026-07-25T10:00:00.000Z',
+      chainEndTs: '2026-07-25T10:00:02.000Z',
+      initialProfileId: 'profile-adult',
+      identifiedAtTs: '2026-07-25T10:00:00.500Z',
+      identifiedProfileId: 'profile-adult',
+      privacyModeChanges: [],
+    },
+    intents: [
+      {
+        chainId: 'chain-lights',
+        intentIndex: 0,
+        ts: '2026-07-25T10:00:00.000Z',
+        utterance: 'Turn on the sofa lamp',
+        type: 'device_control',
+        targets: ['dev-sofa-lamp'],
+        parameters: { on: 'true' },
+        profileId: 'profile-adult',
+      },
+    ],
+    actions: [
+      {
+        chainId: 'chain-lights',
+        actionIndex: 0,
+        intentIndex: 0,
+        ts: '2026-07-25T10:00:01.000Z',
+        deviceId: 'dev-sofa-lamp',
+        beforeState: { on: false },
+        afterState: { on: true, brightness: 80 },
+        result: 'success',
+        errorMessage: null,
+      },
+    ],
+    internetCalls: [],
+  });
+
+  client.seedLog({
+    chain: {
+      chainId: 'chain-weather',
+      deviceId: 'cube',
+      chainStartTs: '2026-07-25T11:00:00.000Z',
+      chainEndTs: '2026-07-25T11:00:03.000Z',
+      initialProfileId: 'profile-adult',
+      identifiedAtTs: null,
+      identifiedProfileId: null,
+      privacyModeChanges: [],
+    },
+    intents: [
+      {
+        chainId: 'chain-weather',
+        intentIndex: 0,
+        ts: '2026-07-25T11:00:00.000Z',
+        utterance: 'What is the weather today?',
+        type: 'question',
+        targets: [],
+        parameters: {},
+        profileId: 'profile-adult',
+      },
+    ],
+    actions: [],
+    internetCalls: [
+      {
+        chainId: 'chain-weather',
+        callIndex: 0,
+        ts: '2026-07-25T11:00:01.000Z',
+        deviceId: 'cube',
+        profileId: 'profile-adult',
+        summary: 'Weather lookup',
+        serviceCategory: 'weather',
+        endpoint: 'https://mock.weather/v1/today',
+        result: 'allowed',
+        errorMessage: null,
+      },
+    ],
+  });
+
+  client.seedLog({
+    chain: {
+      chainId: 'chain-child-blocked',
+      deviceId: 'cube',
+      chainStartTs: '2026-07-25T12:00:00.000Z',
+      chainEndTs: '2026-07-25T12:00:01.000Z',
+      initialProfileId: 'profile-child',
+      identifiedAtTs: '2026-07-25T12:00:00.200Z',
+      identifiedProfileId: 'profile-child',
+      privacyModeChanges: [],
+    },
+    intents: [
+      {
+        chainId: 'chain-child-blocked',
+        intentIndex: 0,
+        ts: '2026-07-25T12:00:00.000Z',
+        utterance: 'Search the web for games',
+        type: 'question',
+        targets: [],
+        parameters: {},
+        profileId: 'profile-child',
+      },
+    ],
+    actions: [],
+    internetCalls: [
+      {
+        chainId: 'chain-child-blocked',
+        callIndex: 0,
+        ts: '2026-07-25T12:00:00.500Z',
+        deviceId: 'cube',
+        profileId: 'profile-child',
+        summary: 'Blocked web search',
+        serviceCategory: 'search',
+        endpoint: 'https://mock.search/q',
+        result: 'blocked',
+        errorMessage: 'Child policy never',
+      },
+    ],
+  });
+
   return client;
 }
 
-/** Singleton demo client for Expo screens (software-only Phase 10). */
+/** Singleton demo client for Expo screens (software-only Phase 10/11). */
 export const demoCubeClient = createSeededMockClient();
 
 export const SCENE_ROUTINE_IDS = ['scene-good-morning', 'scene-movie-time', 'scene-away'] as const;

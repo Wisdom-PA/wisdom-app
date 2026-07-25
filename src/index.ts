@@ -3,6 +3,7 @@ export { HttpCubeClient } from './api/http-cube-client.ts';
 export { MockCubeClient } from './api/mock-cube-client.ts';
 export type {
   BackupManifest,
+  BackupPayload,
   BackupStatus,
   ChainSummary,
   ChatMessage,
@@ -14,6 +15,7 @@ export type {
   CubeStatus,
   Device,
   DeviceCapability,
+  ExportPayload,
   GrantConsentBody,
   GrantConsentResponse,
   InternetPolicy,
@@ -21,6 +23,7 @@ export type {
   LogEntry,
   LogIntent,
   LogInternetCall,
+  MemoryItem,
   PatchConfig,
   PatchDevice,
   PatchProfile,
@@ -36,15 +39,18 @@ export type {
   RoutineTrigger,
   RunRoutineBody,
 } from './api/types.ts';
+export { MemoryLocalBackupStore } from './backup/local-backup-store.ts';
 export {
   createSeededMockClient,
   demoCubeClient,
+  demoLocalBackupStore,
   demoPairingService,
   demoSessionStore,
   demoWifiProvisioner,
   SCENE_ROUTINE_IDS,
 } from './demo/demo-services.ts';
 export { groupDevicesByRoom, isDeviceOn } from './devices/group-by-room.ts';
+export { collectIntents, filterLogEntries, type LogFilters } from './logs/filter-logs.ts';
 export { MockPairingService } from './pairing/mock-pairing-service.ts';
 export {
   type DiscoveredCube,
@@ -55,6 +61,7 @@ export {
   type PairingSession,
   type SessionStore,
 } from './pairing/pairing-service.ts';
+export { buildExportPayload } from './privacy/build-export-payload.ts';
 export {
   allowedInternetPolicies,
   assertInternetPolicyForRole,

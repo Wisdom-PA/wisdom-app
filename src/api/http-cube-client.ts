@@ -1,5 +1,6 @@
 import type { CubeClient } from './cube-client.ts';
 import type {
+  BackupPayload,
   BackupStatus,
   ChatMessage,
   ChatResponse,
@@ -12,6 +13,7 @@ import type {
   GrantConsentBody,
   GrantConsentResponse,
   LogEntry,
+  MemoryItem,
   PatchConfig,
   PatchDevice,
   PatchProfile,
@@ -140,12 +142,24 @@ export class HttpCubeClient implements CubeClient {
     return this.request(`/logs/${chainId}`);
   }
 
+  async clearLogs(): Promise<void> {
+    return this.request('/logs', { method: 'DELETE' });
+  }
+
+  async listMemories(): Promise<MemoryItem[]> {
+    return this.request('/memories');
+  }
+
   async getBackupStatus(): Promise<BackupStatus> {
     return this.request('/backup/status');
   }
 
   async triggerBackup(): Promise<BackupStatus> {
     return this.request('/backup/trigger', { method: 'POST' });
+  }
+
+  async getBackup(backupId: string): Promise<BackupPayload> {
+    return this.request(`/backup/${backupId}`);
   }
 
   async restore(request: RestoreRequest): Promise<RestoreResult> {
