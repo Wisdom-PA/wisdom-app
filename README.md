@@ -21,6 +21,17 @@ Expo tabs and stack screens for:
 Real BLE discovery, key exchange, and secure Wi-Fi transfer to hardware remain
 human-blocked.
 
+## Phase 11 (software-only)
+
+- **Logs** — chain timeline from `queryLogs`, profile/device filters, tap for
+  intents / actions / internetCalls detail
+- **Privacy** — conversation history (intents), delete-all via `clearLogs`,
+  export-my-data (`buildExportPayload`), empty memories placeholder
+- **Backup** — status, trigger, local in-memory store (`MemoryLocalBackupStore`),
+  restore dry-run then confirm; F10.T1-shaped `getBackup` on mock
+- Encrypted at-rest mobile storage and remote cloud backup remain deferred /
+  human-blocked
+
 ## Develop
 
 ```sh

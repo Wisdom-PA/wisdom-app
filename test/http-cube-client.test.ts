@@ -159,10 +159,32 @@ describe('HttpCubeClient', () => {
     expect(fetch).toHaveBeenCalledWith('http://cube.local:3000/logs/chain-1', expect.anything());
   });
 
-  it('calls backup methods', async () => {
+  it('calls backup methods including getBackup and dry-run restore', async () => {
     await client.getBackupStatus();
     await client.triggerBackup();
-    await client.restore({ backupId: 'b-1', mode: 'factory_reset' });
+    await client.getBackup('b-1');
+    expect(fetch).toHaveBeenCalledWith('http://cube.local:3000/backup/b-1', expect.anything());
+    await client.restore({ backupId: 'b-1', mode: 'factory_reset', dryRun: true });
+    expect(fetch).toHaveBeenCalledWith(
+      'http://cube.local:3000/backup/restore',
+      expect.objectContaining({
+        method: 'POST',
+        body: '{"backupId":"b-1","mode":"factory_reset","dryRun":true}',
+      })
+    );
+  });
+
+  it('calls clearLogs and listMemories', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({ ok: true, status: 204 } as Response);
+    await client.clearLogs();
+    expect(fetch).toHaveBeenCalledWith('http://cube.local:3000/logs', expect.objectContaining({ method: 'DELETE' }));
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve([]),
+    } as Response);
+    await client.listMemories();
+    expect(fetch).toHaveBeenCalledWith('http://cube.local:3000/memories', expect.anything());
   });
 
   it('calls chat', async () => {

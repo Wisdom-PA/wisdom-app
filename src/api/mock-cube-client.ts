@@ -1,6 +1,8 @@
 import { defaultInternetPolicy, normalizeCreateProfile } from '../profiles/policy.ts';
 import type { CubeClient } from './cube-client.ts';
 import type {
+  BackupManifest,
+  BackupPayload,
   BackupStatus,
   ChatMessage,
   ChatResponse,
@@ -13,6 +15,7 @@ import type {
   GrantConsentBody,
   GrantConsentResponse,
   LogEntry,
+  MemoryItem,
   PatchConfig,
   PatchDevice,
   PatchProfile,
@@ -47,8 +50,10 @@ export class MockCubeClient implements CubeClient {
   private profiles: Map<string, Profile> = new Map();
   private routines: Map<string, Routine> = new Map();
   private logs: LogEntry[] = [];
+  private memories: MemoryItem[] = [];
   private consentExpiry = new Map<string, number>();
   private backupStatus: BackupStatus = { lastBackup: null, inProgress: false };
+  private backupPayloads = new Map<string, BackupPayload>();
 
   async getStatus(): Promise<CubeStatus> {
     return {
@@ -270,13 +275,21 @@ export class MockCubeClient implements CubeClient {
   }
 
   async queryLogs(params: { limit: number; offset: number }): Promise<LogEntry[]> {
-    return this.logs.slice(params.offset, params.offset + params.limit);
+    return this.logs.slice(params.offset, params.offset + params.limit).map((e) => this.cloneLog(e));
   }
 
   async getChain(chainId: string): Promise<LogEntry> {
     const entry = this.logs.find((l) => l.chain.chainId === chainId);
     if (!entry) throw new Error(`Chain ${chainId} not found`);
-    return entry;
+    return this.cloneLog(entry);
+  }
+
+  async clearLogs(): Promise<void> {
+    this.logs = [];
+  }
+
+  async listMemories(): Promise<MemoryItem[]> {
+    return this.memories.map((m) => ({ ...m }));
   }
 
   async getBackupStatus(): Promise<BackupStatus> {
@@ -287,22 +300,53 @@ export class MockCubeClient implements CubeClient {
   }
 
   async triggerBackup(): Promise<BackupStatus> {
+    const payload = this.buildBackupPayload(uid('backup'));
+    this.backupPayloads.set(payload.manifest.backupId, payload);
     this.backupStatus = {
-      lastBackup: {
-        backupId: uid('backup'),
-        schemaVersion: '1.0.0',
-        createdAt: new Date().toISOString(),
-        cubeId: this.config.cubeId,
-        backupType: 'full',
-        checksum: 'mock-checksum',
-      },
+      lastBackup: { ...payload.manifest },
       inProgress: false,
     };
     return this.getBackupStatus();
   }
 
-  async restore(_request: RestoreRequest): Promise<RestoreResult> {
-    return { success: true, message: 'Mock restore complete' };
+  async getBackup(backupId: string): Promise<BackupPayload> {
+    const payload = this.backupPayloads.get(backupId);
+    if (!payload) throw new Error(`Backup ${backupId} not found`);
+    return structuredClone(payload);
+  }
+
+  async restore(request: RestoreRequest): Promise<RestoreResult> {
+    const dryRun = request.dryRun === true;
+    const known =
+      this.backupPayloads.has(request.backupId) || this.backupStatus.lastBackup?.backupId === request.backupId;
+
+    if (!known) {
+      return {
+        success: false,
+        message: `Backup ${request.backupId} not found`,
+        backupId: request.backupId,
+        mode: request.mode,
+        dryRun,
+      };
+    }
+
+    if (dryRun) {
+      return {
+        success: true,
+        message: `Dry-run OK for ${request.mode}`,
+        backupId: request.backupId,
+        mode: request.mode,
+        dryRun: true,
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Mock restore complete',
+      backupId: request.backupId,
+      mode: request.mode,
+      dryRun: false,
+    };
   }
 
   async chat(message: ChatMessage): Promise<ChatResponse> {
@@ -331,7 +375,45 @@ export class MockCubeClient implements CubeClient {
   }
 
   seedLog(entry: LogEntry): void {
-    this.logs.push(entry);
+    this.logs.push(this.cloneLog(entry));
+  }
+
+  seedMemory(memory: MemoryItem): void {
+    this.memories.push({ ...memory });
+  }
+
+  private buildBackupPayload(backupId: string): BackupPayload {
+    const createdAt = new Date().toISOString();
+    const profiles = [...this.profiles.values()].map((p) => ({ ...p, linkedAdults: [...p.linkedAdults] }));
+    const routines = [...this.routines.values()].map((r) => this.cloneRoutine(r));
+    const devices = [...this.devices.values()].map((d) => this.cloneDevice(d));
+    const memories = this.memories.map((m) => ({ ...m }));
+    const logsIntents = this.logs.flatMap((e) => e.intents.map((i) => ({ ...i, parameters: { ...i.parameters } })));
+    const logsActions = this.logs.flatMap((e) =>
+      e.actions.map((a) => ({ ...a, beforeState: { ...a.beforeState }, afterState: { ...a.afterState } }))
+    );
+    const logsInternetCalls = this.logs.flatMap((e) => e.internetCalls.map((c) => ({ ...c })));
+
+    const manifest: BackupManifest = {
+      backupId,
+      schemaVersion: '1.0.0',
+      createdAt,
+      cubeId: this.config.cubeId,
+      backupType: 'full',
+      checksum: `mock-${backupId}`,
+    };
+
+    return {
+      manifest,
+      profiles,
+      routines,
+      settings: { ...this.config },
+      memories,
+      devices,
+      logs_intents: logsIntents,
+      logs_actions: logsActions,
+      logs_internet_calls: logsInternetCalls,
+    };
   }
 
   private requireDevice(deviceId: string): Device {
@@ -361,6 +443,22 @@ export class MockCubeClient implements CubeClient {
       triggers: routine.triggers.map((t) => ({ ...t, config: { ...t.config } })),
       conditions: routine.conditions.map((c) => ({ ...c, config: { ...c.config } })),
       actions: routine.actions.map((a) => ({ ...a, config: { ...a.config } })),
+    };
+  }
+
+  private cloneLog(entry: LogEntry): LogEntry {
+    return {
+      chain: {
+        ...entry.chain,
+        privacyModeChanges: entry.chain.privacyModeChanges.map((c) => ({ ...c })),
+      },
+      intents: entry.intents.map((i) => ({ ...i, parameters: { ...i.parameters }, targets: [...i.targets] })),
+      actions: entry.actions.map((a) => ({
+        ...a,
+        beforeState: { ...a.beforeState },
+        afterState: { ...a.afterState },
+      })),
+      internetCalls: entry.internetCalls.map((c) => ({ ...c })),
     };
   }
 }

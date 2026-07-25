@@ -310,8 +310,44 @@ describe('MockCubeClient', () => {
       expect(chain.chain.deviceId).toBe('dev-1');
     });
 
+    it('clears logs', async () => {
+      client.seedLog({
+        chain: {
+          chainId: 'chain-x',
+          deviceId: 'cube',
+          chainStartTs: '2026-01-01T00:00:00Z',
+          chainEndTs: null,
+          initialProfileId: null,
+          identifiedAtTs: null,
+          identifiedProfileId: null,
+          privacyModeChanges: [],
+        },
+        intents: [],
+        actions: [],
+        internetCalls: [],
+      });
+      await client.clearLogs();
+      expect(await client.queryLogs({ limit: 10, offset: 0 })).toEqual([]);
+    });
+
     it('throws on missing chain', async () => {
       await expect(client.getChain('nope')).rejects.toThrow('not found');
+    });
+  });
+
+  describe('memories', () => {
+    it('lists empty memories by default', async () => {
+      expect(await client.listMemories()).toEqual([]);
+    });
+
+    it('lists seeded memories', async () => {
+      client.seedMemory({
+        memoryId: 'm1',
+        profileId: 'p1',
+        label: 'Favourite colour blue',
+        createdAt: '2026-07-25T00:00:00.000Z',
+      });
+      expect(await client.listMemories()).toHaveLength(1);
     });
   });
 
@@ -322,15 +358,54 @@ describe('MockCubeClient', () => {
       expect(status.inProgress).toBe(false);
     });
 
-    it('triggers backup and updates status', async () => {
+    it('triggers backup with F10.T1 payload sections', async () => {
+      client.seedProfile({
+        profileId: 'p1',
+        preferredName: 'A',
+        role: 'adult',
+        language: 'en',
+        voiceVerbosity: 'normal',
+        internetPolicy: 'ask_every_time',
+        linkedAdults: [],
+        createdAt: '2026-07-25T00:00:00.000Z',
+      });
       const status = await client.triggerBackup();
       expect(status.lastBackup).not.toBeNull();
       expect(status.lastBackup?.backupType).toBe('full');
+      const id = status.lastBackup?.backupId;
+      expect(id).toBeTruthy();
+      if (!id) throw new Error('expected backup id');
+      const payload = await client.getBackup(id);
+      expect(payload.manifest.backupId).toBe(id);
+      expect(payload.profiles).toHaveLength(1);
+      expect(payload.settings.cubeId).toBe('mock-cube');
+      expect(payload.routines).toEqual([]);
+      expect(payload.devices).toEqual([]);
+      expect(payload.memories).toEqual([]);
+      expect(payload.logs_intents).toEqual([]);
     });
 
-    it('restores successfully', async () => {
-      const result = await client.restore({ backupId: 'b-1', mode: 'factory_reset' });
+    it('dry-runs then restores', async () => {
+      const status = await client.triggerBackup();
+      const backupId = status.lastBackup?.backupId;
+      expect(backupId).toBeTruthy();
+      if (!backupId) throw new Error('expected backup id');
+      const dry = await client.restore({ backupId, mode: 'factory_reset', dryRun: true });
+      expect(dry.success).toBe(true);
+      expect(dry.dryRun).toBe(true);
+      const result = await client.restore({ backupId, mode: 'device_routine_recovery', dryRun: false });
       expect(result.success).toBe(true);
+      expect(result.dryRun).toBe(false);
+      expect(result.mode).toBe('device_routine_recovery');
+    });
+
+    it('fails restore for unknown backup', async () => {
+      const result = await client.restore({ backupId: 'missing', mode: 'factory_reset' });
+      expect(result.success).toBe(false);
+    });
+
+    it('throws on missing getBackup', async () => {
+      await expect(client.getBackup('nope')).rejects.toThrow('not found');
     });
   });
 
