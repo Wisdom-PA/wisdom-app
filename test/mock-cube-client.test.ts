@@ -410,10 +410,26 @@ describe('MockCubeClient', () => {
   });
 
   describe('chat', () => {
-    it('returns a mock response', async () => {
+    it('returns an on-device response when allowInternet is false', async () => {
       const response = await client.chat({ text: 'Turn on the lights' });
-      expect(response.reply).toContain('Turn on the lights');
-      expect(response.intent).toBeNull();
+      expect(response.reply).toContain('On-device mock response');
+      expect(response.usedInternet).toBe(false);
+      expect(response.privacyMode).toBe('paranoid');
+      expect(response.actions).toEqual([]);
+      expect(response.chainId).toMatch(/^chat-/);
+    });
+
+    it('returns an online response when allowInternet is true', async () => {
+      const response = await client.chat({ text: 'What is the weather?', allowInternet: true });
+      expect(response.reply).toContain('Online mock response');
+      expect(response.usedInternet).toBe(true);
+    });
+
+    it('stays on-device when offline mode blocks internet', async () => {
+      await client.patchConfig({ offlineModeEnabled: true });
+      const response = await client.chat({ text: 'news', allowInternet: true });
+      expect(response.usedInternet).toBe(false);
+      expect(response.reply).toContain('On-device mock response');
     });
   });
 });

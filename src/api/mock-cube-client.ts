@@ -350,10 +350,14 @@ export class MockCubeClient implements CubeClient {
   }
 
   async chat(message: ChatMessage): Promise<ChatResponse> {
+    const allowInternet = message.allowInternet === true;
+    const usedInternet = allowInternet && !this.config.offlineModeEnabled;
     return {
-      reply: `Mock response to: ${message.text}`,
-      intent: null,
-      actionsTaken: [],
+      chainId: `chat-${Date.now()}`,
+      reply: usedInternet ? `Online mock response to: ${message.text}` : `On-device mock response to: ${message.text}`,
+      usedInternet,
+      privacyMode: this.config.defaultPrivacyMode,
+      actions: [],
     };
   }
 

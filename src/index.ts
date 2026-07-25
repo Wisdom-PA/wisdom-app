@@ -6,6 +6,7 @@ export type {
   BackupPayload,
   BackupStatus,
   ChainSummary,
+  ChatActionResult,
   ChatMessage,
   ChatResponse,
   ConsentStatus,
@@ -40,6 +41,17 @@ export type {
   RunRoutineBody,
 } from './api/types.ts';
 export { MemoryLocalBackupStore } from './backup/local-backup-store.ts';
+export {
+  answerSource,
+  answerSourceLabel,
+  appendAssistantMessage,
+  appendUserMessage,
+  buildChatMessage,
+  type ChatThreadMessage,
+  canSendChatText,
+  formatAnswerMeta,
+  privacyModeLabel,
+} from './chat/chat-helpers.ts';
 export {
   createSeededMockClient,
   demoCubeClient,
